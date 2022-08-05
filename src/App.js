@@ -1,25 +1,56 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useRef } from "react";
+import { useScript } from "./google-sign";
+import jwt_deocde from "jwt-decode";
 
-function App() {
+const App = () => {
+  const googlebuttonref = useRef();
+  const [user, setuser] = useState(false);
+  const onGoogleSignIn = (user) => {
+    let userCred = user.credential;
+    let payload = jwt_deocde(userCred);
+    console.log(payload);
+    setuser(payload);
+  };
+
+  useScript("https://accounts.google.com/gsi/client", () => {
+    window.google.accounts.id.initialize({
+      client_id: '', // google client id
+      callback: onGoogleSignIn,
+      auto_select: false,
+    });
+
+    window.google.accounts.id.renderButton(googlebuttonref.current, {
+      size: "medium",
+    });
+  });
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+      }}
+    >
+      {!user && <div ref={googlebuttonref}></div>}
+      {user && (
+        <div>
+          <h1>{user.name}</h1>
+          <img src={user.picture} alt="profile" />
+          <p>{user.email}</p>
+
+          <button
+            onClick={() => {
+              setuser(false);
+            }}
+          >
+            Logout
+          </button>
+        </div>
+      )}
     </div>
   );
-}
+};
 
 export default App;
